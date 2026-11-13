@@ -1,5 +1,7 @@
 # flatppl-stats-counts
 
+[Function reference](docs/reference.md)
+
 Scalar ON/OFF count statistics for FlatPPL 0.1: independent Poisson laws,
 conditional background profiling, and an exact Gamma-background count marginal.
 

@@ -1,6 +1,8 @@
 # Count statistics reference
 
-FlatPPL compatibility and library version: **0.1**. All arguments are scalar.
+Library version **0.1** · [Package overview](../README.md)
+
+FlatPPL compatibility: **0.1**. All arguments are scalar.
 Means and `signal` are expected counts, not count rates per unit time.
 Observed counts are nonnegative integers. Every argument is explicit; the library
 introduces no inferred parameter or prior on the caller's behalf.
