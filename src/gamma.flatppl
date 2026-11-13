@@ -1,0 +1,58 @@
+%%%
+# Exact Gamma-background count marginal
+
+Gamma uses shape/rate. The ON count fixes the finite-sum length at compilation.
+All fitted inputs are explicit arguments across each helper boundary.
+%%%
+flatppl_compat = "0.1"
+
+# Gamma(q+k)/(Gamma(q)*k!) is a product of adjacent ratios. Prefix sums
+# avoid subtracting large loggamma values to recover small coefficients.
+gamma_logratio(k, q) = ifelse(
+    k > 0,
+    log((q + ifelse(k > 0, k - 1, 0)) / ifelse(k > 0, k, 1)),
+    0
+)
+count_logstep(k) = log(ifelse(k > 0, k, 1))
+
+gamma_logcoefficients(ks, q) = (
+    cumsum(broadcast(gamma_logratio, k = ks, q = q))
+    .- reverse(cumsum(count_logstep.(ks)))
+)
+
+# With u = signal*total_rate, remove total_rate powers from the coefficients.
+# Reverse the background powers for polynomial's ascending signal coefficients.
+gamma_polynomial(on_counts, q, u, total_rate, coefficients, scale) = (
+    scale - (on_counts + q) * log(total_rate)
+    + log(polynomial(reverse(exp.(coefficients .- scale)), u))
+)
+
+gamma_sum(on_counts, q, signal, total_rate, ks, coefficients) = ifelse(
+    signal <= 1 / total_rate,
+    gamma_polynomial(
+        on_counts, q,
+        ifelse(signal <= 1 / total_rate, signal, 1 / total_rate) * total_rate,
+        total_rate, coefficients, maximum(coefficients)
+    ),
+    logsumexp(
+        coefficients
+        .+ (on_counts .- ks) .* log(ifelse(signal <= 1 / total_rate, 1, signal))
+        .- (q .+ ks) .* log(total_rate)
+    )
+)
+
+gamma_score_sum(on_counts, off_counts, signal, shape, total_rate, ks) = (
+    gamma_sum(
+        on_counts, off_counts + shape, signal, total_rate, ks,
+        gamma_logcoefficients(ks, off_counts + shape)
+    )
+)
+
+onoff_gamma_logdensity(on_counts, off_counts, signal, off_on_ratio, shape, rate) = (
+    -signal + off_counts * log(off_on_ratio) + shape * log(rate)
+    - loggamma(off_counts + 1) + (loggamma(off_counts + shape) - loggamma(shape))
+    + gamma_score_sum(
+        on_counts, off_counts, signal, shape, 1 + off_on_ratio + rate,
+        linspace(0, on_counts, on_counts + 1)
+    )
+)
