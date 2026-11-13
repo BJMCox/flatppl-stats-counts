@@ -1,0 +1,29 @@
+flatppl_compat = "0.1"
+a = load_module("../main.flatppl")
+x = elementof(cartpow(reals, 6))
+signal = x[1]
+ratio = x[2]
+shape = x[3]
+rate = x[4]
+background = x[5]
+control_signal = x[6]
+values = [
+  a.onoff_background_mle(7, 12, signal, ratio),
+  a.onoff_profile_loglikelihood(7, 12, signal, ratio),
+  a.onoff_gamma_logdensity(7, 12, signal, ratio, shape, rate),
+  a.onoff_background_mle(0, 0, signal, ratio),
+  a.onoff_profile_loglikelihood(0, 0, signal, ratio),
+  a.onoff_gamma_logdensity(0, 0, signal, ratio, shape, rate),
+  a.onoff_background_mle(7, 0, signal, ratio),
+  a.onoff_profile_loglikelihood(7, 0, signal, ratio),
+  a.onoff_gamma_logdensity(7, 0, signal, ratio, shape, rate),
+  a.onoff_gamma_logdensity(1, 0, signal, ratio, shape, rate),
+  a.onoff_gamma_logdensity(150, 0, signal, ratio, shape, rate),
+  logdensityof(a.onoff(signal, background, ratio), record(on = 7, off = 12)),
+  logdensityof(
+    a.onoff_with_leakage(signal, control_signal, background, ratio),
+    record(on = 7, off = 12),
+  ),
+]
+inputs = x
+outputs = values

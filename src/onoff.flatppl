@@ -1,0 +1,59 @@
+%%%
+# Independent ON/OFF counts
+
+Background is the expected ON count; off_on_ratio is OFF/ON background exposure.
+The named product directly constructs the two independent observation laws.
+%%%
+flatppl_compat = "0.1"
+
+onoff(signal, background, off_on_ratio) = joint(
+    on = Poisson(signal + background),
+    off = Poisson(off_on_ratio * background)
+)
+
+onoff_with_leakage(signal, control_signal, background, off_on_ratio) = joint(
+    on = Poisson(signal + background),
+    off = Poisson(control_signal + off_on_ratio * background)
+)
+
+# Rationalize the positive quadratic root when its linear numerator cancels.
+# The m=0 branch is exact; its unused sqrt and denominator stay nonsingular.
+background_root(a, discriminant, off_counts, signal, c) = ifelse(
+    off_counts == 0,
+    ifelse(a > 0, a / c, 0),
+    ifelse(
+        a >= 0,
+        (a + sqrt(discriminant)) / (2 * c),
+        2 * off_counts * signal / ifelse(a < 0, sqrt(discriminant) - a, 1)
+    )
+)
+
+background_quadratic(on_counts, off_counts, signal, c, a) = background_root(
+    a,
+    ifelse(off_counts > 0, a ^ 2 + 4 * c * off_counts * signal, 1),
+    off_counts, signal, c
+)
+
+onoff_background_mle(on_counts, off_counts, signal, off_on_ratio) = (
+    background_quadratic(
+        on_counts, off_counts, signal, 1 + off_on_ratio,
+        on_counts + off_counts - (1 + off_on_ratio) * signal
+    )
+)
+
+# Guard the logarithm itself: eager evaluation and reverse AD see unused arms.
+poisson_logpmf(counts, mean) = (
+    counts * log(ifelse(counts == 0, 1, mean)) - mean - loggamma(counts + 1)
+)
+
+profile_at_background(on_counts, off_counts, signal, off_on_ratio, background) = (
+    poisson_logpmf(on_counts, signal + background)
+    + poisson_logpmf(off_counts, off_on_ratio * background)
+)
+
+onoff_profile_loglikelihood(on_counts, off_counts, signal, off_on_ratio) = (
+    profile_at_background(
+        on_counts, off_counts, signal, off_on_ratio,
+        onoff_background_mle(on_counts, off_counts, signal, off_on_ratio)
+    )
+)

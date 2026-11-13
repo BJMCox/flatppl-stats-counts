@@ -1,0 +1,14 @@
+%%%
+# ON/OFF count statistics
+
+Independent count laws, conditional background profiling, and an explicit
+Gamma-background marginal. No background prior is implicit in the joint laws.
+%%%
+flatppl_compat = "0.1"
+counts = load_module("src/onoff.flatppl")
+gamma_background = load_module("src/gamma.flatppl")
+onoff = counts.onoff
+onoff_with_leakage = counts.onoff_with_leakage
+onoff_background_mle = counts.onoff_background_mle
+onoff_profile_loglikelihood = counts.onoff_profile_loglikelihood
+onoff_gamma_logdensity = gamma_background.onoff_gamma_logdensity

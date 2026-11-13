@@ -1,0 +1,34 @@
+%%%
+# Synthetic single-bin ON/OFF lab
+
+Inputs are expected source/background counts, OFF/ON exposure and observed counts.
+Outputs distinguish the joint observation law, its profile score and the named
+Gamma-background marginal. The latter alone specifies a background prior.
+%%%
+flatppl_compat = "0.1"
+counts = load_module("../main.flatppl")
+on_data = 7
+off_data = 12
+signal = 3.0
+background = 2.0
+off_on_ratio = 5.0
+shape = 2.0
+rate = 1.0
+observation = counts.onoff(signal, background, off_on_ratio)
+joint_logdensity = logdensityof(observation, record(on = on_data, off = off_data))
+background_mle = counts.onoff_background_mle(on_data, off_data, signal, off_on_ratio)
+profile_loglikelihood = counts.onoff_profile_loglikelihood(on_data, off_data, signal, off_on_ratio)
+gamma_logdensity = counts.onoff_gamma_logdensity(
+  on_data,
+  off_data,
+  signal,
+  off_on_ratio,
+  shape,
+  rate,
+)
+outputs = record(
+  joint_logdensity = joint_logdensity,
+  background_mle = background_mle,
+  profile_loglikelihood = profile_loglikelihood,
+  gamma_logdensity = gamma_logdensity,
+)
