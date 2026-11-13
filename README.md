@@ -3,6 +3,8 @@
 Scalar ON/OFF count statistics for FlatPPL 0.1: independent Poisson laws,
 conditional background profiling, and an exact Gamma-background count marginal.
 
+Run the [posterior example](https://live.flatppl.org/#model=https%3A%2F%2Fraw.githubusercontent.com%2FBJMCox%2Fflatppl-stats-counts%2Fmain%2Fexamples%2Fplayground.flatppl&target=Pi_post) in the live playground. It loads its library modules from GitHub.
+
 ```flatppl
 flatppl_compat = "0.1"
 counts = load_module("main.flatppl")

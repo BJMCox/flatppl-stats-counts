@@ -1,0 +1,13 @@
+%%%
+# ON/OFF signal and background
+
+Infer source and background counts from seven ON events and twelve OFF events.
+The OFF exposure is five times the ON exposure. Both priors use shape/rate.
+%%%
+flatppl_compat = "0.1"
+counts = load_module("https://raw.githubusercontent.com/BJMCox/flatppl-stats-counts/9acbadf4b280b6ad92425f6f367d2fc49f08beba/main.flatppl")
+signal ~ Gamma(2, 0.5)
+background ~ Gamma(2, 1)
+observed ~ counts.onoff(signal, background, 5)
+model = lawof(record(signal = signal, background = background, observed = observed))
+Pi_post = restrict(model, record(observed = record(on = 7, off = 12)))
