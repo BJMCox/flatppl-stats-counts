@@ -160,3 +160,52 @@ The method costs linear work in `on_counts`; it is intended for scalar count bin
 Floating-point coefficient underflow or overflow can limit extreme counts and
 parameter scales. Invalid physical inputs are outside the domain, with no clipping
 or implicit regularization.
+
+## Examples and validation
+
+The background argument is the expected **ON** background count. The ratio is
+**OFF/ON** background exposure, the reciprocal of the usual ON/OFF `alpha`.
+ON and OFF event samples must be disjoint and conditionally independent.
+Both laws impose no prior. Only `onoff_gamma_logdensity` integrates a stated
+Gamma(shape, rate) background prior.
+
+The [synthetic lab](../examples/lab.flatppl) provides explicit inputs and these outputs:
+
+| Output | Value |
+|---|---:|
+| `joint_logdensity` | -4.615289353760048 |
+| `background_mle` | 2.534240194975457 |
+| `profile_loglikelihood` | -4.269155694681689 |
+| `gamma_logdensity` | -5.376379699724651 |
+
+For example, compile its deterministic outputs with
+`flatppl stablehlo examples/lab.flatppl --dtype f64 -o lab.mlir`.
+The lab is synthetic; it does not reproduce an instrument dataset.
+
+### Validation
+
+With existing NumPy/SciPy and the JavaScript engine checkout:
+
+```sh
+FLATPPL_JS_DIR=/path/to/flatppl-js python tests/check.py
+```
+
+This uses the real module loader and observation-law materialiser, independent
+Poisson score roots, a Poisson/negative-multinomial convolution, numerical
+Gamma-background integration, and joint-count normalization.
+
+Prepare portable CPU/GPU f32/f64 modules with the Rust CLI:
+
+```sh
+FLATPPL_CLI=/path/to/flatppl python tests/run_compiled.py --prepare --modules /tmp/counts-modules
+```
+
+Then, in an existing JAX/Enzyme-JAX environment, run batched values, full
+Jacobians, and zero-signal Gamma curvatures on the selected JAX device:
+
+```sh
+python tests/run_compiled.py --modules /tmp/counts-modules --output /tmp/counts-results.json
+```
+
+No environment or dependencies are installed by these commands. `main.flatppl`
+loads the two source modules; either module also loads independently.
